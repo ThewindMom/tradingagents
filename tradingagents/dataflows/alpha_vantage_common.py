@@ -7,6 +7,7 @@ from io import StringIO
 
 API_BASE_URL = "https://www.alphavantage.co/query"
 
+
 def get_api_key() -> str:
     """Retrieve the API key for Alpha Vantage from environment variables."""
     api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
@@ -14,11 +15,12 @@ def get_api_key() -> str:
         raise ValueError("ALPHA_VANTAGE_API_KEY environment variable is not set.")
     return api_key
 
+
 def format_datetime_for_api(date_input) -> str:
     """Convert various date formats to YYYYMMDDTHHMM format required by Alpha Vantage API."""
     if isinstance(date_input, str):
         # If already in correct format, return as-is
-        if len(date_input) == 13 and 'T' in date_input:
+        if len(date_input) == 13 and "T" in date_input:
             return date_input
         # Try to parse common date formats
         try:
@@ -33,55 +35,86 @@ def format_datetime_for_api(date_input) -> str:
     elif isinstance(date_input, datetime):
         return date_input.strftime("%Y%m%dT%H%M")
     else:
-        raise ValueError(f"Date must be string or datetime object, got {type(date_input)}")
+        raise ValueError(
+            f"Date must be string or datetime object, got {type(date_input)}"
+        )
+
 
 class AlphaVantageRateLimitError(Exception):
     """Exception raised when Alpha Vantage API rate limit is exceeded."""
+
     pass
+
 
 def _make_api_request(function_name: str, params: dict) -> dict | str:
     """Helper function to make API requests and handle responses.
-    
+
     Raises:
         AlphaVantageRateLimitError: When API rate limit is exceeded
     """
+    print(
+        f"DEBUG: _make_api_request called with function={function_name}, params={list(params.keys())}"
+    )
+
     # Create a copy of params to avoid modifying the original
     api_params = params.copy()
-    api_params.update({
-        "function": function_name,
-        "apikey": get_api_key(),
-        "source": "trading_agents",
-    })
-    
+    api_params.update(
+        {
+            "function": function_name,
+            "apikey": get_api_key(),
+            "source": "trading_agents",
+        }
+    )
+
+    print(f"DEBUG: API_KEY exists: {bool(get_api_key())}")
+
     # Handle entitlement parameter if present in params or global variable
-    current_entitlement = globals().get('_current_entitlement')
+    current_entitlement = globals().get("_current_entitlement")
     entitlement = api_params.get("entitlement") or current_entitlement
-    
+
     if entitlement:
         api_params["entitlement"] = entitlement
     elif "entitlement" in api_params:
         # Remove entitlement if it's None or empty
         api_params.pop("entitlement", None)
-    
-    response = requests.get(API_BASE_URL, params=api_params)
-    response.raise_for_status()
+
+    print(f"DEBUG: Making API request to {API_BASE_URL}")
+
+    try:
+        response = requests.get(API_BASE_URL, params=api_params)
+        print(f"DEBUG: Response status code: {response.status_code}")
+        response.raise_for_status()
+        print(f"DEBUG: Response received, length: {len(response.text)}")
+    except Exception as e:
+        print(f"ERROR: API request failed: {type(e).__name__}: {e}")
+        raise
 
     response_text = response.text
-    
+
+    print(
+        f"DEBUG: Response text preview: {response_text[:200] if len(response_text) > 200 else response_text}"
+    )
+
     # Check if response is JSON (error responses are typically JSON)
     try:
         response_json = json.loads(response_text)
         # Check for rate limit error
         if "Information" in response_json:
             info_message = response_json["Information"]
-            if "rate limit" in info_message.lower() or "api key" in info_message.lower():
-                raise AlphaVantageRateLimitError(f"Alpha Vantage rate limit exceeded: {info_message}")
+            print(f"DEBUG: Alpha Vantage Information message: {info_message}")
+            if (
+                "rate limit" in info_message.lower()
+                or "api key" in info_message.lower()
+            ):
+                print(f"DEBUG: Alpha Vantage rate limit detected")
+                raise AlphaVantageRateLimitError(
+                    f"Alpha Vantage rate limit exceeded: {info_message}"
+                )
     except json.JSONDecodeError:
         # Response is not JSON (likely CSV data), which is normal
-        pass
+        print(f"DEBUG: Response is not JSON, treating as CSV data")
 
     return response_text
-
 
 
 def _filter_csv_by_date_range(csv_data: str, start_date: str, end_date: str) -> str:
