@@ -28,3 +28,41 @@ def get_google_news(
         return ""
 
     return f"## {query} Google News, from {before} to {curr_date}:\n\n{news_str}"
+
+
+def get_global_news_google(curr_date, look_back_days=7, limit=5):
+    """
+    Global news function compatible with get_global_news signature.
+    Wrapper around get_google_news for global/macroeconomic news.
+    """
+    print(
+        f"DEBUG: get_global_news_google called with curr_date={curr_date}, look_back_days={look_back_days}, limit={limit}"
+    )
+
+    query = "global macroeconomics economy market"
+    start_date = datetime.strptime(curr_date, "%Y-%m-%d")
+    before = start_date - relativedelta(days=look_back_days)
+    before = before.strftime("%Y-%m-%d")
+
+    try:
+        news_results = getNewsData(query, before, curr_date)
+
+        news_str = ""
+        count = 0
+        for news in news_results:
+            if count >= limit:
+                break
+            news_str += f"### {news['title']} (source: {news['source']}) \n\n{news['snippet']}\n\n"
+            count += 1
+
+        print(f"DEBUG: get_global_news_google returned {count} articles")
+
+        if count == 0:
+            return "No global news articles found for the specified period."
+
+        return (
+            f"## Global Macroeconomic News from {before} to {curr_date}:\n\n{news_str}"
+        )
+    except Exception as e:
+        print(f"ERROR: get_global_news_google failed: {type(e).__name__}: {e}")
+        raise

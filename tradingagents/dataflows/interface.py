@@ -20,7 +20,7 @@ from .y_finance import (
     get_income_statement as get_yfinance_income_statement,
     get_insider_transactions as get_yfinance_insider_transactions,
 )
-from .google import get_google_news
+from .google import get_google_news, get_global_news_google
 from .openai import (
     get_stock_news_openai,
     get_global_news_openai,
@@ -116,7 +116,7 @@ VENDOR_METHODS = {
     },
     "get_global_news": {
         "openai": get_global_news_openai,
-        "google": get_google_news,
+        "google": get_global_news_google,
         "local": get_reddit_global_news,
     },
     "get_insider_sentiment": {"local": get_finnhub_company_insider_sentiment},
