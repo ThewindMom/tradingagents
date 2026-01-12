@@ -5,7 +5,7 @@ from tradingagents.dataflows.interface import route_to_vendor
 
 @tool
 def get_fundamentals(
-    ticker: Annotated[str, "ticker symbol"],
+    ticker: Annotated[str, "ticker symbol for company"],
     curr_date: Annotated[str, "current date you are trading at, yyyy-mm-dd"],
 ) -> str:
     """
@@ -13,11 +13,16 @@ def get_fundamentals(
     Uses the configured fundamental_data vendor.
     Args:
         ticker (str): Ticker symbol of the company
-        curr_date (str): Current date you are trading at, yyyy-mm-dd
+        curr_date (str): Current date you are trading at, yyyy-mm-dd format
     Returns:
         str: A formatted report containing comprehensive fundamental data
     """
-    return route_to_vendor("get_fundamentals", ticker, curr_date)
+    try:
+        return route_to_vendor("get_fundamentals", ticker, curr_date)
+    except RuntimeError:
+        # Temporary fallback - return basic info so analysis can continue
+        print("WARNING: Fundamentals data unavailable, using fallback")
+        return f"## Fundamental Data for {ticker}\n\n**Note**: Unable to retrieve fundamentals due to API issues. Using limited data for analysis.\n\n"
 
 
 @tool
