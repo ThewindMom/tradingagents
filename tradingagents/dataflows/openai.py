@@ -16,6 +16,10 @@ def get_stock_news_openai(query, start_date, end_date):
             {
                 "role": "system",
                 "content": f"Can you search Social Media for {query} from {start_date} to {end_date}? Make sure you only get to data posted during that period.",
+            },
+            {
+                "role": "user",
+                "content": f"Search for {query} news from {start_date} to {end_date}",
             }
         ],
     )
@@ -45,7 +49,11 @@ def get_global_news_openai(curr_date, look_back_days=7, limit=5):
             messages=[
                 {
                     "role": "system",
-                    "content": f"Can you search global or macroeconomics news from {look_back_days} days before {curr_date} to {curr_date} that would be informative for trading purposes? Make sure you only get to data posted during that period. Limit results to {limit} articles.",
+                    "content": f"You are a financial news researcher. Search for global or macroeconomics news from {look_back_days} days before {curr_date} to {curr_date} that would be informative for trading purposes.",
+                },
+                {
+                    "role": "user",
+                    "content": f"Find global macroeconomic news from {look_back_days} days before {curr_date} to {curr_date}. Limit results to {limit} articles.",
                 }
             ],
         )
@@ -81,7 +89,11 @@ def get_fundamentals_openai(ticker, curr_date):
             messages=[
                 {
                     "role": "system",
-                    "content": f"Can you search Fundamental for discussions on {ticker} during of month before {curr_date} to month of {curr_date}. Make sure you only get to data posted during that period. List as a table, with PE/PS/Cash flow/ etc.",
+                    "content": f"You are a financial analyst. Provide fundamental analysis for {ticker}.",
+                },
+                {
+                    "role": "user",
+                    "content": f"Search for fundamental discussions on {ticker} from month before {curr_date} to {curr_date}. Provide analysis with PE, PS, Cash flow, etc. as a table.",
                 }
             ],
         )

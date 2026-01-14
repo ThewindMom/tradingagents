@@ -109,9 +109,7 @@ def get_finnhub_news(
         if len(data) == 0:
             continue
         for entry in data:
-            current_news = (
-                "### " + entry["headline"] + f" ({day})" + "\n" + entry["summary"]
-            )
+            current_news = f"### {entry['headline']} ({day})\n{entry['summary']}"
             combined_result += current_news + "\n\n"
 
     return f"## {query} News, from {start_date} to {end_date}:\n" + str(combined_result)
